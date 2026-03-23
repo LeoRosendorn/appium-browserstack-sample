@@ -1,35 +1,32 @@
 name: Appium BrowserStack Tests
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  schedule:
+    # Todos los lunes a las 15:00 hs Argentina (GMT-3) = 18:00 UTC
+    - cron: '0 18 * * 1'
+  workflow_dispatch:
 
 jobs:
-  appium-browserstack:
-    timeout-minutes: 60
+  test:
+    name: Run Appium Tests on BrowserStack
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Instalar dependencias
         run: npm ci
 
-      - name: Run Appium tests on BrowserStack
+      - name: Ejecutar tests en BrowserStack
+        run: npm test
         env:
           BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
           BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-        run: npm test
-
-      - uses: actions/upload-artifact@v4
-        if: ${{ !cancelled() }}
-        with:
-          name: appium-report
-          path: reports/
-          retention-days: 30
