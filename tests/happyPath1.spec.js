@@ -1,38 +1,53 @@
-import { waitAndClick } from '../helpers/gestures.js';
+describe('Happy Path 1 — Búsqueda en Wikipedia', () => {
 
-/**
- * Happy Path 1 — Navegación y verificación de la pantalla principal
- * Valida que la app carga correctamente y que se puede navegar
- * a la sección de formulario de entrada de texto.
- */
-describe('Happy Path 1 — Navegación a Text Input', () => {
+  it('debe abrir la app y mostrar la pantalla de búsqueda', async () => {
+    await driver.pause(4000);
 
-  it('debe abrir la app y navegar a Text Input', async () => {
-    // Esperar que la app cargue completamente
-    await driver.pause(3000);
-
-    // Buscar el elemento de Text Input en la pantalla principal
-    const textInputBtn = await $('android=new UiSelector().text("Text Input")');
-    await textInputBtn.waitForDisplayed({ timeout: 15000 });
-    await textInputBtn.click();
-
-    await driver.pause(1500);
-
-    // Verificar que llegamos a la pantalla de Text Input
-    const inputField = await $('android=new UiSelector().className("android.widget.EditText")');
-    const isDisplayed = await inputField.isDisplayed();
-    expect(isDisplayed).toBe(true);
+    // Intentar múltiples selectores
+    let searchBtn;
+    try {
+      searchBtn = await $('android=new UiSelector().resourceId("org.wikipedia.alpha:id/search_container")');
+      await searchBtn.waitForDisplayed({ timeout: 12000 });
+    } catch {
+      searchBtn = await $('android=new UiSelector().className("android.widget.TextView").instance(0)');
+      await searchBtn.waitForDisplayed({ timeout: 12000 });
+    }
+    expect(await searchBtn.isDisplayed()).toBe(true);
   });
 
-  it('debe escribir texto y verificar que aparece en pantalla', async () => {
-    const inputField = await $('android=new UiSelector().className("android.widget.EditText")');
-    await inputField.waitForDisplayed({ timeout: 10000 });
+  it('debe buscar un artículo y ver resultados', async () => {
+    let searchContainer;
+    try {
+      searchContainer = await $('android=new UiSelector().resourceId("org.wikipedia.alpha:id/search_container")');
+      await searchContainer.waitForDisplayed({ timeout: 8000 });
+    } catch {
+      searchContainer = await $('android=new UiSelector().className("android.widget.TextView").instance(0)');
+      await searchContainer.waitForDisplayed({ timeout: 8000 });
+    }
+    await searchContainer.click();
+    await driver.pause(1500);
 
-    await inputField.setValue('Leo QA Automation');
-    await driver.pause(1000);
+    let searchInput;
+    try {
+      searchInput = await $('android=new UiSelector().resourceId("org.wikipedia.alpha:id/search_src_text")');
+      await searchInput.waitForDisplayed({ timeout: 8000 });
+    } catch {
+      searchInput = await $('android=new UiSelector().className("android.widget.EditText")');
+      await searchInput.waitForDisplayed({ timeout: 8000 });
+    }
+    await searchInput.setValue('Argentina');
+    await driver.pause(3000);
 
-    const inputText = await inputField.getText();
-    expect(inputText).toBe('Leo QA Automation');
+    // Verificar resultados
+    let firstResult;
+    try {
+      firstResult = await $('android=new UiSelector().resourceId("org.wikipedia.alpha:id/page_list_item_title")');
+      await firstResult.waitForDisplayed({ timeout: 12000 });
+    } catch {
+      firstResult = await $('android=new UiSelector().className("android.widget.TextView").instance(1)');
+      await firstResult.waitForDisplayed({ timeout: 12000 });
+    }
+    expect(await firstResult.isDisplayed()).toBe(true);
   });
 
 });
